@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캠퍼스 우산 대여 시스템</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: var(--card-bg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 481px) {
+            .phone-container {
+                border-radius: 24px;
+                border: 8px solid #cbd5e1;
+            }
+        }
+
+        /* 상단바 */
+        .header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 대여소 카드 */
+        .station-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .station-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .station-card:hover {
+            border-color: var(--primary);
+            background: #f0fdf4;
+        }
+
+        .station-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .station-info p {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        /* 대여 중 상태 패널 */
+        .active-rental-card {
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            display: none;
+        }
+
+        .active-rental-card.show {
+            display: block;
+        }
+
+        .rental-timer {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+            letter-spacing: 1px;
+        }
+
+        /* 모달 팝업 */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-sub);
+        }
+
+        .payment-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pay-option {
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .pay-option input {
+            accent-color: var(--primary);
+        }
+
+        /* 하단 네비게이션 */
+        .nav-bar {
+            display: flex;
+            border-top: 1px solid var(--border);
+            background: white;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- 상단 헤더 -->
+        <div class="header">
+            <h1>☂️ 캠퍼스 우산 대여 서비스</h1>
+        </div>
+
+        <!-- 메인 화면 컨텐츠 -->
+        <div class="content" id="main-content">
+            
+            <!-- 대여 중인 우산 현황 (초기 숨김) -->
+            <div id="active-rental-section" class="active-rental-card">
+                <h3>🔔 대여 중인 우산</h3>
+                <p id="active-station-text">대여 장소: 형남공학관</p>
+                <div class="rental-timer" id="timer-display">71:59:59</div>
+                <p style="font-size: 0.85rem; opacity: 0.9;">남은 대여 시간 (72시간 제한)</p>
+                <button class="btn" style="background: white; color: var(--primary); width: 100%; margin-top: 15px;" onclick="openReturnModal()">반납하기</button>
+            </div>
+
+            <!-- 대여소 목록 -->
+            <div>
+                <div class="section-title">
+                    <span>대여소별 잔여 수량</span>
+                    <span style="font-size: 0.85rem; color: var(--text-sub);">실시간 현황</span>
+                </div>
+                <div class="station-grid" id="station-list">
+                    <!-- 자바스크립트로 동적 생성 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 탭 메뉴 -->
+        <div class="nav-bar">
+            <div class="nav-item active">대여/반납</div>
+            <div class="nav-item" onclick="alert('준비 중인 메뉴입니다.')">이용안내</div>
+            <div class="nav-item" onclick="alert('준비 중인 메뉴입니다.')">고객센터</div>
+        </div>
+
+        <!-- 결제 모달 -->
+        <div class="modal-overlay" id="payment-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modal-title">우산 대여 결제</span>
+                    <button class="close-btn" onclick="closeModal('payment-modal')">&times;</button>
+                </div>
+                <div style="font-size: 0.95rem; color: var(--text-sub);">
+                    선택 대여소: <strong id="selected-station-name" style="color: var(--text-main);"></strong><br>
+                    이용 요금: <strong style="color: var(--primary);">무료 (보증금 1,000원 반납 시 환급)</strong><br>
+                    대여 기간: <strong>최대 72시간</strong>
+                </div>
+                <div class="payment-options">
+                    <label class="pay-option">
+                        <input type="radio" name="pay" checked> 카카오페이 / 토스페이
+                    </label>
+                    <label class="pay-option">
+                        <input type="radio" name="pay"> 신용/체크카드 결제
+                    </label>
+                </div>
+                <button class="btn" style="padding: 14px; font-size: 1rem; margin-top: 10px;" onclick="completeRental()">1,000원 결제 및 대여 시작</button>
+            </div>
+        </div>
+
+        <!-- 반납 완료 영수증 모달 -->
+        <div class="modal-overlay" id="receipt-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>✨ 반납 완료 영수증</span>
+                    <button class="close-btn" onclick="closeModal('receipt-modal')">&times;</button>
+                </div>
+                <div style="font-size: 0.95rem; color: var(--text-main); line-height: 1.6;">
+                    <p>우산이 정상적으로 반납되었습니다.</p>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 10px 0;">
+                    <p>📍 대여 장소: <span id="receipt-start">형남공학관</span></p>
+                    <p>📍 반납 장소: <span id="receipt-end">학생회관</span></p>
+                    <p>⏱️ 이용 시간: <strong>0시간 5분</strong></p>
+                    <p style="color: var(--success); margin-top: 5px;">💰 보증금 1,000원이 환급되었습니다.</p>
+                </div>
+                <button class="btn" style="padding: 14px; margin-top: 10px;" onclick="closeModal('receipt-modal')">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 대여소 데이터
+        let stations = [
+            { id: 1, name: "형남공학관", count: 12 },
+            { id: 2, name: "미래관", count: 8 },
+            { id: 3, name: "학생회관", count: 15 }
+        ];
+
+        let isRenting = false;
+        let currentRentedStation = "";
+        let timerInterval = null;
+        let selectedStationId = null;
+
+        // 화면 렌더링
+        function renderStations() {
+            const listContainer = document.getElementById('station-list');
+            listContainer.innerHTML = '';
+
+            stations.forEach(station => {
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.innerHTML = `
+                    <div class="station-info">
+                        <h3>${station.name}</h3>
+                        <p>대여 가능 수량: <strong>${station.count}대</strong></p>
+                    </div>
+                    <button class="btn" ${isRenting || station.count === 0 ? 'disabled' : ''} onclick="openPaymentModal(${station.id})">
+                        ${station.count === 0 ? '재고 없음' : '대여하기'}
+                    </button>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // 결제 모달 열기
+        function openPaymentModal(stationId) {
+            selectedStationId = stationId;
+            const station = stations.find(s => s.id === stationId);
+            document.getElementById('selected-station-name').textContent = station.name;
+            document.getElementById('payment-modal').classList.add('show');
+        }
+
+        // 모달 닫기
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // 대여 완료 처리
+        function completeRental() {
+            closeModal('payment-modal');
+            const station = stations.find(s => s.id === selectedStationId);
+            station.count--; // 수량 차감
+            
+            isRenting = true;
+            currentRentedStation = station.name;
+
+            // UI 변경
+            document.getElementById('active-rental-section').classList.add('show');
+            document.getElementById('active-station-text').textContent = `대여 장소: ${currentRentedStation}`;
+            
+            renderStations();
+            startTimer(72 * 3600); // 72시간 타이머 시작
+            alert('대여가 완료되었습니다! 우산을 안전하게 이용해 주세요.');
+        }
+
+        // 72시간 타이머 구동
+        function startTimer(duration) {
+            let timer = duration;
+            clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                let hours = Math.floor(timer / 3600);
+                let minutes = Math.floor((timer % 3600) / 60);
+                let seconds = timer % 60;
+
+                hours = hours < 10 ? "0" + hours : hours;
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('timer-display').textContent = `${hours}:${minutes}:${seconds}`;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    alert('대여 시간이 만료되었습니다. 추가 요금이 부과될 수 있습니다.');
+                }
+            }, 1000);
+        }
+
+        // 반납하기 프로세스
+        function openReturnModal() {
+            // 어느 곳에 반납할지 선택지를 포함한 프롬프트 또는 간이 처리
+            let returnLocation = prompt("반납하실 장소를 선택해 주세요.\n1. 형남공학관\n2. 미래관\n3. 학생회관\n(숫자 또는 장소명을 입력하세요)");
+            
+            let matchedStation = stations.find(s => s.name === returnLocation || s.id == returnLocation);
+            
+            if (!matchedStation) {
+                // 기본값으로 학생회관 지정 혹은 취소 시
+                if(returnLocation !== null) {
+                    matchedStation = stations[2]; // 기본 학생회관
+                } else {
+                    return;
+                }
+            }
+
+            // 재고 증가
+            matchedStation.count++;
+            
+            // 타이머 종료 및 상태 초기화
+            clearInterval(timerInterval);
+            isRenting = false;
+            document.getElementById('active-rental-section').classList.remove('show');
+
+            // 영수증 표시
+            document.getElementById('receipt-start').textContent = currentRentedStation;
+            document.getElementById('receipt-end').textContent = matchedStation.name;
+            document.getElementById('receipt-modal').classList.add('show');
+
+            renderStations();
+        }
+
+        // 초기 실행
+        renderStations();
+    </script>
+</body>
+</html>
