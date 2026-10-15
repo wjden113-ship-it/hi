@@ -289,36 +289,62 @@
             <button class="btn" style="padding: 4px 10px; font-size: 0.75rem;" onclick="connectSerial()">🔌 기기 연결</button>
         </div>
 
-        <!-- 메인 화면 컨텐츠 -->
+        <!-- 메인 컨텐츠 영역 -->
         <div class="content" id="main-content">
             
-            <!-- 대여 중인 우산 현황 (초기 숨김) -->
-            <div id="active-rental-section" class="active-rental-card">
-                <h3>🔔 대여 중인 우산</h3>
-                <p id="active-station-text">대여 장소: 형남공학관</p>
-                <div class="rental-timer" id="timer-display">71:59:59</div>
-                <p style="font-size: 0.85rem; opacity: 0.9;">남은 대여 시간 (72시간 제한)</p>
-                <!-- 반납하기 버튼은 이제 NFC+센서 태깅으로 자동 처리되므로 안내 문구로 대체하거나 보조용으로 유지 -->
-                <p style="font-size: 0.8rem; margin-top: 15px; opacity: 0.9; text-align: center;">💡 반납함에 우산을 넣고 NFC 태그를 태깅하세요</p>
+            <!-- [탭 1] 대여/반납 화면 -->
+            <div id="tab-rental" class="tab-pane">
+                <!-- 대여 중인 우산 현황 (초기 숨김) -->
+                <div id="active-rental-section" class="active-rental-card">
+                    <h3>🔔 대여 중인 우산</h3>
+                    <p id="active-station-text">대여 장소: 형남공학관</p>
+                    <div class="rental-timer" id="timer-display">71:59:59</div>
+                    <p style="font-size: 0.85rem; opacity: 0.9;">남은 대여 시간 (72시간 제한)</p>
+                    <p style="font-size: 0.8rem; margin-top: 15px; opacity: 0.9; text-align: center;">💡 반납함에 우산을 넣고 NFC 태그를 태깅하세요</p>
+                </div>
+
+                <!-- 대여소 목록 -->
+                <div style="margin-top: 10px;">
+                    <div class="section-title">
+                        <span>대여소별 잔여 수량</span>
+                        <span style="font-size: 0.85rem; color: var(--text-sub);">실시간 현황</span>
+                    </div>
+                    <div class="station-grid" id="station-list">
+                        <!-- 자바스크립트로 동적 생성 -->
+                    </div>
+                </div>
             </div>
 
-            <!-- 대여소 목록 -->
-            <div>
-                <div class="section-title">
-                    <span>대여소별 잔여 수량</span>
-                    <span style="font-size: 0.85rem; color: var(--text-sub);">실시간 현황</span>
-                </div>
-                <div class="station-grid" id="station-list">
-                    <!-- 자바스크립트로 동적 생성 -->
+            <!-- [탭 2] 이용안내 화면 -->
+            <div id="tab-guide" class="tab-pane" style="display: none;">
+                <div class="section-title">📖 서비스 이용 안내</div>
+                <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.6; color: var(--text-sub);">
+                    <p><strong>1. 대여 방법</strong><br>- 원하는 대여소를 선택하고 결제를 진행하면 솔레노이드 락이 열립니다.</p>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+                    <p><strong>2. 반납 방법</strong><br>- 반납함에 우산을 넣고 NFC 태그를 태깅하면 센서 감지 후 자동으로 반납 완료됩니다.</p>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;">
+                    <p><strong>3. 이용 시간</strong><br>- 최대 72시간 동안 무료로 이용하실 수 있습니다.</p>
                 </div>
             </div>
+
+            <!-- [탭 3] 고객센터 화면 -->
+            <div id="tab-center" class="tab-pane" style="display: none;">
+                <div class="section-title">📞 고객센터 및 문의</div>
+                <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.6; color: var(--text-sub);">
+                    <p><strong>캠퍼스 우산 대여 지원팀</strong></p>
+                    <p style="margin-top: 8px;">운영 시간: 평일 09:00 ~ 18:00</p>
+                    <p>문의 전화: 02-XXX-XXXX</p>
+                    <p>이메일: support@campus-umbrella.com</p>
+                </div>
+            </div>
+
         </div>
 
         <!-- 하단 탭 메뉴 -->
         <div class="nav-bar">
-            <div class="nav-item active">대여/반납</div>
-            <div class="nav-item" onclick="alert('준비 중인 메뉴입니다.')">이용안내</div>
-            <div class="nav-item" onclick="alert('준비 중인 메뉴입니다.')">고객센터</div>
+            <div class="nav-item active" onclick="switchTab('rental', this)">대여/반납</div>
+            <div class="nav-item" onclick="switchTab('guide', this)">이용안내</div>
+            <div class="nav-item" onclick="switchTab('center', this)">고객센터</div>
         </div>
 
         <!-- 결제 모달 -->
@@ -366,6 +392,19 @@
     </div>
 
     <script>
+        // --- 하단 탭 전환 함수 ---
+        function switchTab(tabName, element) {
+            document.getElementById('tab-rental').style.display = 'none';
+            document.getElementById('tab-guide').style.display = 'none';
+            document.getElementById('tab-center').style.display = 'none';
+
+            document.getElementById('tab-' + tabName).style.display = 'block';
+
+            let navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
         // --- Web Serial API 연동 로직 ---
         let port;
         let writer;
@@ -379,7 +418,6 @@
                 document.getElementById('connection-status').style.color = "#10b981";
                 alert('아두이노와 성공적으로 연결되었습니다!');
 
-                // 아두이노로부터 신호를 읽어오는 루프 시작
                 readSerialData();
             } catch (error) {
                 console.error('시리얼 연결 실패:', error);
@@ -400,7 +438,6 @@
             }
         }
 
-        // 아두이노로부터 들어오는 메시지 실시간 수신
         async function readSerialData() {
             const textDecoder = new TextDecoderStream();
             const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
@@ -421,7 +458,6 @@
                                 let cleanLine = line.trim();
                                 console.log("아두이노 수신 메시지: " + cleanLine);
                                 
-                                // 아두이노에서 반납 완료 신호(RETURN_DONE)가 오면 웹 자동 처리
                                 if (cleanLine === "RETURN_DONE") {
                                     triggerWebReturn();
                                 }
@@ -434,7 +470,7 @@
             }
         }
 
-        // --- 기존 시스템 로직[span_0](start_span)[span_0](end_span) ---
+        // --- 기존 시스템 로직 ---
         let stations = [
             { id: 1, name: "형남공학관", count: 12 },
             { id: 2, name: "미래관", count: 8 },
@@ -480,18 +516,17 @@
         function completeRental() {
             closeModal('payment-modal');
             const station = stations.find(s => s.id === selectedStationId);
-            station.count--;[span_1](start_span)[span_1](end_span)
+            station.count--; 
             
             isRenting = true;
             currentRentedStation = station.name;
 
-            document.getElementById('active-rental-section').classList.add('show');[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
+            document.getElementById('active-rental-section').classList.add('show');
             document.getElementById('active-station-text').textContent = `대여 장소: ${currentRentedStation}`;
             
             renderStations();
-            startTimer(72 * 3600);[span_4](start_span)[span_4](end_span)
+            startTimer(72 * 3600); 
 
-            // 아두이노로 대여 신호('R') 전송
             sendDataToArduino('R');
 
             alert('대여가 완료되었습니다! 우산을 안전하게 이용해 주세요.');
@@ -519,20 +554,18 @@
             }, 1000);
         }
 
-        // 아두이노에서 반납 완료 신호를 받았을 때 실행되는 함수
         function triggerWebReturn() {
-            if (!isRenting) return; // 대여 중이 아닐 때는 무시
+            if (!isRenting) return;
 
             let matchedStation = stations.find(s => s.name === currentRentedStation);
             if (!matchedStation) matchedStation = stations[0];
 
-            matchedStation.count++; // 잔여 수량 증가[span_5](start_span)[span_5](end_span)
+            matchedStation.count++; 
             
-            clearInterval(timerInterval); // 타이머 중지[span_6](start_span)[span_6](end_span)
+            clearInterval(timerInterval); 
             isRenting = false;
-            document.getElementById('active-rental-section').classList.remove('show');[span_7](start_span)[span_7](end_span)[span_8](start_span)[span_8](end_span)
+            document.getElementById('active-rental-section').classList.remove('show');
 
-            // 영수증 모달 띄우기[span_9](start_span)[span_9](end_span)
             document.getElementById('receipt-start').textContent = currentRentedStation;
             document.getElementById('receipt-end').textContent = matchedStation.name;
             document.getElementById('receipt-modal').classList.add('show');
